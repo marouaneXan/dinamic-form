@@ -1,14 +1,15 @@
-<select [(ngModel)]="selectedOption" (ngModelChange)="onDropdownChange($event)">
-  <option *ngFor="let option of dropdownOptions" [value]="option">
-    {{ option }}
-  </option>
-</select>
-
-<form [formGroup]="dynamicForm" (ngSubmit)="onSubmit()">
-  <ng-container *ngFor="let controlName of dynamicForm.controls | keyvalue">
-    <div *ngSwitchCase="'input'">
-      <input type="text" [formControlName]="controlName.key" />
+<form [formGroup]="form">
+  <div *ngFor="let relation of relationSelected(relationKey)">
+    <h3>{{ relation.label }}</h3>
+    <div *ngFor="let field of relation.fields">
+      <label>{{ field.label }}</label>
+      <input *ngIf="field.type === 'bool'" type="checkbox" [formControlName]="field.key">
+      <input *ngIf="field.type === 'string'" type="text" [formControlName]="field.key">
+      <select *ngIf="field.type === 'enum'" [formControlName]="field.key">
+        <option *ngFor="let value of field.values" [value]="value.key">{{ value.label }}</option>
+      </select>
+      <div *ngIf="error" class="error">{{error.required ? 'please this field is required':''}}</div>
     </div>
-    </ng-container>
-  <button type="submit" [disabled]="!dynamicForm.valid">Submit</button>
+  </div>
+  <button type="button" (click)="onSubmit()">Send</button>
 </form>

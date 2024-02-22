@@ -1,50 +1,59 @@
-import { Component } from '@angular/core';
-import { FormModel } from './form-model';
-import { FormControl, FormGroup } from '@angular/forms';
-import { FormService } from './form-service.service';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { relations } from './data'
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'dinamic-form';
-  formElements: FormModel[] = [];
-  dropdownOptions: string[] = [];
-  selectedOption: string = '';
-  dynamicForm = new FormGroup({});
+  relations = relations
+  form = new FormGroup({});
+  relationKey = 'FAM_MMF'
+  error: any = ''
 
+  constructor(private fb: FormBuilder) { }
 
-  constructor(private formService: FormService) { }
+  ngOnInit(): void {
+    this.form = this.createFormGroup();
+  }
 
-  fetchData() {
-    this.formService.getFormElements().subscribe(data => {
-      this.formElements = data;
-      this.dropdownOptions = this.formElements.map(section => section.type);
-      this.dynamicForm = new FormGroup({});
+  createFormGroup(): FormGroup {
+    const group: any = {};
+
+    this.relations.forEach((relation: any) => {
+      relation.fields.forEach((field: any) => {
+        group[field.key] = new FormControl('', Validators.required);
+      });
     });
+
+    return this.fb.group(group);
   }
-  onSubmit() {
-    console.log(this.dynamicForm.value);
-  }
-  onDropdownChange(option: string) {
-    this.selectedOption = option;
-    this.generateForm();
-  }
-  generateForm() {
-    this.dynamicForm = new FormGroup({});
-  
-    const selectedFormElements = this.formElements.filter(element => element.type === this.selectedOption);
-  
-    selectedFormElements.forEach(element => { 
-      if (element.validators) {  // Check if any validation rules are present
-        this.dynamicForm.addControl(element.label, new FormControl('', element.validators as [])); 
-      } else {
-        this.dynamicForm.addControl(element.label, new FormControl('')); 
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      for (const controlKey in this.form.controls) {
+        const control = this.form.get(controlKey);
+
+        if (control?.invalid) {
+          this.error = control.errors
+        }
       }
-    });
+    } else {
+      console.log("this.form.value");
+      console.log(this.form.value);
+      console.log("this.form.value");
+    }
   }
-  
+
+  relationSelected(relationKey: any) {
+    return this.relations.map((rk: any) => {
+      return rk.key === relationKey ? rk : ''
+    })
+  }
+
+
 
 }
